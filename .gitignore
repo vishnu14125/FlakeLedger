@@ -1,0 +1,5 @@
+node_modules/
+.flakeledger/
+dist/
+build/
+.env
