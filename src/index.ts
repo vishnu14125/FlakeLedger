@@ -1,11 +1,19 @@
 /**
- * FlakeLedger - Initial Project Skeleton
- * 
- * This is the entry point for the FlakeLedger investigation platform.
+ * FlakeLedger - CLI & Core Engine
  */
+import { TestResult, ExperimentConfig, Observation } from './types';
+import { parseVitestJson } from './parser';
+
+export {
+  TestResult,
+  ExperimentConfig,
+  Observation,
+  parseVitestJson
+};
 
 export function main() {
-  console.log("FlakeLedger initialized.");
+  console.log("FlakeLedger CLI initialized.");
+  console.log("Core types and parsers loaded.");
 }
 
 if (require.main === module) {
