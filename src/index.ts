@@ -7,6 +7,7 @@ import { analyzeExperiment, Classification, Confidence, DiagnosisResult } from '
 import { validateExperimentConfig } from './validator';
 import { IExperimentRepository } from './repository';
 import { LocalFileExperimentRepository } from './local-repository';
+import { PostgresExperimentRepository } from './postgres-repository';
 
 export {
   TestResult,
@@ -16,7 +17,8 @@ export {
   analyzeExperiment,
   validateExperimentConfig,
   IExperimentRepository,
-  LocalFileExperimentRepository
+  LocalFileExperimentRepository,
+  PostgresExperimentRepository
 };
 
 export function main() {
