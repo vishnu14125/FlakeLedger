@@ -5,6 +5,8 @@ import { TestResult, ExperimentConfig, Observation } from './types';
 import { parseVitestJson } from './parser';
 import { analyzeExperiment, Classification, Confidence, DiagnosisResult } from './diagnosis';
 import { validateExperimentConfig } from './validator';
+import { IExperimentRepository } from './repository';
+import { LocalFileExperimentRepository } from './local-repository';
 
 export {
   TestResult,
@@ -12,12 +14,14 @@ export {
   Observation,
   parseVitestJson,
   analyzeExperiment,
-  validateExperimentConfig
+  validateExperimentConfig,
+  IExperimentRepository,
+  LocalFileExperimentRepository
 };
 
 export function main() {
   console.log("FlakeLedger CLI initialized.");
-  console.log("Core types, parsers, and diagnosis engine loaded.");
+  console.log("Core types, parsers, diagnosis engine, and persistence loaded.");
 }
 
 if (require.main === module) {
