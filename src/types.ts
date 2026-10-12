@@ -13,6 +13,13 @@ export interface ExperimentConfig {
   concurrency?: number;
   failFast?: boolean;
   retryPolicy?: RetryPolicy;
+  /**
+   * How `target` and `condition.args` are interpreted. `'argv'`: each string is
+   * one literal runner argument. Absent: the record predates this contract and
+   * its strings were once joined and parsed by a shell, so they are split with
+   * POSIX quoting rules. See orchestrator/invocation.ts.
+   */
+  argsFormat?: 'argv';
 }
 
 export interface Condition {
