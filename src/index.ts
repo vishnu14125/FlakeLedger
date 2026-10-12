@@ -12,6 +12,8 @@ import { BoundedCapture, MAX_TERMINAL_OUTPUT_BYTES, MAX_PARSER_BYTES } from './o
 import { ExperimentPlanner, ExecutionTask } from './orchestrator/planner';
 import { ExecutionWorker } from './orchestrator/worker';
 import { ExecutionScheduler } from './orchestrator/scheduler';
+import { runExperiment } from './orchestrator/index';
+import { ExperimentService } from './service';
 
 export {
   TestResult,
@@ -29,12 +31,14 @@ export {
   ExperimentPlanner,
   ExecutionTask,
   ExecutionWorker,
-  ExecutionScheduler
+  ExecutionScheduler,
+  runExperiment,
+  ExperimentService
 };
 
 export function main() {
   console.log("FlakeLedger CLI initialized.");
-  console.log("Core types, parsers, diagnosis engine, persistence, and execution orchestrator loaded.");
+  console.log("Core types, parsers, diagnosis engine, persistence, execution orchestrator, and service layer loaded.");
 }
 
 if (require.main === module) {
