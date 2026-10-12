@@ -81,7 +81,9 @@ export class LocalFileExperimentRepository implements IExperimentRepository {
   public async updateMetadata(experimentId: string, updates: Partial<ExperimentMetadata>): Promise<void> {
     const meta = await this.getMetadata(experimentId);
     if (!meta) throw new Error(`Experiment ${experimentId} not found`);
-    Object.assign(meta, updates);
+    // Lifecycle fields only: `config` is what gets executed and never changes.
+    if (updates.status !== undefined) meta.status = updates.status;
+    if (updates.summary !== undefined) meta.summary = updates.summary;
     this.atomicWrite(path.join(this.getExpDir(experimentId), 'experiment.json'), meta);
   }
 

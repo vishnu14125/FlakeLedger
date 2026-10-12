@@ -14,6 +14,9 @@ import { ExecutionWorker } from './orchestrator/worker';
 import { ExecutionScheduler } from './orchestrator/scheduler';
 import { runExperiment } from './orchestrator/index';
 import { ExperimentService } from './service';
+import { createApi, ApiOptions } from './api';
+import { ApiExperimentRepository } from './api-repository';
+import { resolveServerConfig, ServerConfig } from './server-config';
 
 export {
   TestResult,
@@ -33,12 +36,17 @@ export {
   ExecutionWorker,
   ExecutionScheduler,
   runExperiment,
-  ExperimentService
+  ExperimentService,
+  createApi,
+  ApiOptions,
+  ApiExperimentRepository,
+  resolveServerConfig,
+  ServerConfig
 };
 
 export function main() {
   console.log("FlakeLedger CLI initialized.");
-  console.log("Core types, parsers, diagnosis engine, persistence, execution orchestrator, and service layer loaded.");
+  console.log("Core types, parsers, diagnosis engine, persistence, execution orchestrator, service layer, and HTTP API loaded.");
 }
 
 if (require.main === module) {
