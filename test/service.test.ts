@@ -117,17 +117,31 @@ describe('Phase 7 Application Service Layer', () => {
     const repo1 = new LocalFileExperimentRepository(repoDir);
     const service1 = new ExperimentService(repo1);
     
-    await service1.createExperiment({ ...baseConfig, experimentId: 'svc-res', runsPerCondition: 2 });
-    
-    // We execute, let it do 1 run, then cancel it to simulate "crashing" midway
-    const p = service1.executeExperiment('svc-res');
-    await new Promise(r => setTimeout(r, 1500)); // wait for 1st run
-    await service1.cancelExperiment('svc-res'); // Halt
-    
-    const obs1 = await service1.getObservations('svc-res');
-    // At least some runs should have started/completed or we cancelled early
-    // We will just verify it can be resumed
-    
+    // Each run hangs until the worker's timeout, so a run occupies exactly
+    // RUN_MS regardless of how fast the machine starts Vitest. (A fixed sleep
+    // before cancelling assumed the experiment was still running; on a fast CI
+    // runner both runs finished first and cancel correctly reported
+    // EXPERIMENT_NOT_RUNNING.)
+    const RUN_MS = 3000;
+    await service1.createExperiment({
+      ...baseConfig,
+      experimentId: 'svc-res',
+      target: 'test/fixtures/hang.test.ts',
+      runsPerCondition: 2,
+      timeoutMs: RUN_MS,
+    });
+
+    // Execute, let exactly one run finish, then cancel while the second is in flight.
+    await service1.executeExperiment('svc-res');
+    for (let i = 0; i < 200 && (await service1.getObservations('svc-res')).length < 1; i++) {
+      await new Promise(r => setTimeout(r, 50));
+    }
+    expect(await service1.getObservations('svc-res')).toHaveLength(1);
+    await service1.cancelExperiment('svc-res'); // Halt mid-run
+
+    // The interrupted second run is not recorded, so it is still owed.
+    expect(await service1.getObservations('svc-res')).toHaveLength(1);
+
     // 2. New instance (simulate API restart)
     const repo2 = new LocalFileExperimentRepository(repoDir);
     const service2 = new ExperimentService(repo2);
@@ -149,7 +163,39 @@ describe('Phase 7 Application Service Layer', () => {
     
     const obsFinal = await service2.getObservations('svc-res');
     expect(obsFinal.length).toBe(2); // 2 runs
-  }, 20000);
+    // Resume ran only the owed run: run 1 from the first instance is kept as-is.
+    expect(obsFinal.map(o => o.runNumber).sort()).toEqual([1, 2]);
+  }, 30000);
+
+  test('Cancelling an investigation that already finished is rejected and leaves it completed', async () => {
+    // Runs finish immediately, as on a fast machine: the race the restart test
+    // used to lose. Cancellation applies only to an in-memory running scheduler.
+    vi.spyOn(ExecutionWorker.prototype, 'execute').mockImplementation(async (task) => ({
+      observationId: `${task.experimentId}-${task.conditionId}-${task.runNumber}-1`,
+      experimentId: task.experimentId,
+      conditionId: task.conditionId,
+      runNumber: task.runNumber,
+      startedAt: new Date().toISOString(),
+      durationMs: 1,
+      processStatus: 'success',
+      testResults: [],
+      environment: { nodeVersion: process.version, platform: 'test', arch: 'test', timezone: 'UTC', args: [] },
+    }));
+
+    const repo = new LocalFileExperimentRepository(repoDir);
+    const service = new ExperimentService(repo);
+    await service.createExperiment({ ...baseConfig, experimentId: 'svc-done', runsPerCondition: 2 });
+    await service.executeExperiment('svc-done');
+
+    for (let i = 0; i < 100 && (await service.getExperiment('svc-done')).status !== 'completed'; i++) {
+      await new Promise(r => setTimeout(r, 20));
+    }
+    expect((await service.getExperiment('svc-done')).status).toBe('completed');
+
+    await expect(service.cancelExperiment('svc-done')).rejects.toThrow('EXPERIMENT_NOT_RUNNING');
+    expect((await service.getExperiment('svc-done')).status).toBe('completed');
+    expect(await service.getObservations('svc-done')).toHaveLength(2);
+  });
 
 
   test('Re-executing a fully observed experiment runs nothing and records nothing (R7)', async () => {

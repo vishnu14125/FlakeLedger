@@ -1,0 +1,59 @@
+{
+  "conditions": {
+    "baseline": {
+      "id": "baseline",
+      "name": "Controlled Baseline (UTC)",
+      "type": "environment",
+      "env": { "TZ": "UTC" },
+      "args": []
+    },
+    "timezone": {
+      "id": "timezone",
+      "name": "Timezone Perturbation",
+      "type": "environment",
+      "env": { "TZ": "America/New_York" },
+      "args": []
+    },
+    "order-baseline": {
+      "id": "order-baseline",
+      "name": "Order Baseline",
+      "type": "order",
+      "env": {},
+      "args": []
+    },
+    "order-seed-3": {
+      "id": "order-seed-3",
+      "name": "Order Shuffle (Seed 3)",
+      "type": "order",
+      "env": {},
+      "args": ["--sequence.shuffle", "--sequence.seed=3"]
+    },
+    "order-seed-9": {
+      "id": "order-seed-9",
+      "name": "Order Shuffle (Seed 9)",
+      "type": "order",
+      "env": {},
+      "args": ["--sequence.shuffle", "--sequence.seed=9"]
+    },
+    "concurrency-parallel": {
+      "id": "concurrency-parallel",
+      "name": "Concurrency (Parallel - Default)",
+      "type": "concurrency",
+      "env": {},
+      "args": []
+    },
+    "concurrency-serial": {
+      "id": "concurrency-serial",
+      "name": "Concurrency (Serial)",
+      "type": "concurrency",
+      "env": {},
+      "args": ["--no-file-parallelism"]
+    },
+    "intermittent-baseline": {
+      "id": "intermittent-baseline",
+      "name": "Intermittent Baseline",
+      "env": {},
+      "args": []
+    }
+  }
+}
