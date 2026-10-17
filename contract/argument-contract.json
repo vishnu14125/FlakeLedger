@@ -1,0 +1,110 @@
+{
+  "description": "Runner argument contract shared by flakeledger-cli (worker) and flakeledger-dashboard (reproduction command). Both packages must produce exactly `expect` for every case. `argsFormat: \"argv\"`: every string is one literal runner argument. Absent: legacy record, strings are split with POSIX quoting rules and never interpreted by a shell.",
+  "cases": [
+    {
+      "name": "argv: plain target, no args",
+      "config": { "argsFormat": "argv", "target": "src/a.test.ts", "args": [] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": [] }
+    },
+    {
+      "name": "argv: test-name filter is one literal argument, spaces preserved",
+      "config": { "argsFormat": "argv", "target": "src/a.test.ts", "args": ["--testNamePattern=applies promo code"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["--testNamePattern=applies promo code"] }
+    },
+    {
+      "name": "argv: target with spaces stays one argument",
+      "config": { "argsFormat": "argv", "target": "src/user tests/a.test.ts", "args": [] },
+      "expect": { "targetArgs": ["src/user tests/a.test.ts"], "conditionArgs": [] }
+    },
+    {
+      "name": "argv: target is trimmed",
+      "config": { "argsFormat": "argv", "target": "  src/a.test.ts  ", "args": [] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": [] }
+    },
+    {
+      "name": "argv: leading dash target is protected from option parsing",
+      "config": { "argsFormat": "argv", "target": "-dash.test.ts", "args": [] },
+      "expect": { "targetArgs": ["./-dash.test.ts"], "conditionArgs": [] }
+    },
+    {
+      "name": "argv: shell syntax and quotes in args are data, not syntax",
+      "config": { "argsFormat": "argv", "target": "src/a.test.ts", "args": ["; echo hi", "$(id)", "`id`", "it's", "\"q\"", "", "a\nb", "&& touch pwned"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["; echo hi", "$(id)", "`id`", "it's", "\"q\"", "", "a\nb", "&& touch pwned"] }
+    },
+    {
+      "name": "argv: preset order args pass through in order",
+      "config": { "argsFormat": "argv", "target": "src/a.test.ts", "args": ["--sequence.shuffle", "--sequence.seed=3"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["--sequence.shuffle", "--sequence.seed=3"] }
+    },
+    {
+      "name": "legacy: single-quoted filter is unquoted exactly as sh did",
+      "config": { "target": "src/a.test.ts", "args": ["--testNamePattern='applies promo code'"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["--testNamePattern=applies promo code"] }
+    },
+    {
+      "name": "legacy: double-quoted filter",
+      "config": { "target": "src/a.test.ts", "args": ["--testNamePattern=\"a b\""] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["--testNamePattern=a b"] }
+    },
+    {
+      "name": "legacy: backslash-escaped quote",
+      "config": { "target": "src/a.test.ts", "args": ["--testNamePattern=it\\'s"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["--testNamePattern=it's"] }
+    },
+    {
+      "name": "legacy: unquoted space splits words, as sh did",
+      "config": { "target": "src/a.test.ts", "args": ["-t", "user profile"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["-t", "user", "profile"] }
+    },
+    {
+      "name": "legacy: empty quoted word is preserved",
+      "config": { "target": "src/a.test.ts", "args": ["''"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": [""] }
+    },
+    {
+      "name": "legacy: unquoted space in target splits words, as sh did",
+      "config": { "target": "src/a b.test.ts", "args": [] },
+      "expect": { "targetArgs": ["src/a", "b.test.ts"], "conditionArgs": [] }
+    },
+    {
+      "name": "legacy: glob characters are passed literally (no expansion)",
+      "config": { "target": "src/a.test.ts", "args": ["--dir=src/*.ts"] },
+      "expect": { "targetArgs": ["src/a.test.ts"], "conditionArgs": ["--dir=src/*.ts"] }
+    },
+    {
+      "name": "legacy: command separator is rejected",
+      "config": { "target": "src/a.test.ts", "args": ["; rm -rf /"] },
+      "expect": { "error": true }
+    },
+    {
+      "name": "legacy: command substitution is rejected",
+      "config": { "target": "src/a.test.ts", "args": ["$(id)"] },
+      "expect": { "error": true }
+    },
+    {
+      "name": "legacy: backticks are rejected",
+      "config": { "target": "src/a.test.ts", "args": ["`id`"] },
+      "expect": { "error": true }
+    },
+    {
+      "name": "legacy: variable expansion inside double quotes is rejected",
+      "config": { "target": "src/a.test.ts", "args": ["\"$HOME\""] },
+      "expect": { "error": true }
+    },
+    {
+      "name": "legacy: unterminated quote is rejected",
+      "config": { "target": "src/a.test.ts", "args": ["--testNamePattern='oops"] },
+      "expect": { "error": true }
+    },
+    {
+      "name": "legacy: operators in target are rejected",
+      "config": { "target": "src/a.test.ts && echo hi", "args": [] },
+      "expect": { "error": true }
+    },
+    {
+      "name": "legacy: unquoted newline is rejected",
+      "config": { "target": "src/a.test.ts", "args": ["a\nb"] },
+      "expect": { "error": true }
+    }
+  ]
+}
